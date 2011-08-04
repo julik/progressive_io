@@ -15,6 +15,11 @@ A wrapper for IO objects that allows a callback to be set which is called when a
   io = ProgressiveIO.new(File.open("/bigfile.dat")) do | pos, total_size |
     puts "Read %d bytes of %d" % [ pos, total_size ]
   end
+  
+  # Then, elsewhere deep in the calling code...
+  io.each do | line | # Each yielded line will call the callback block
+     # Do stuff
+  end
 
 == REQUIREMENTS:
 
