@@ -1,3 +1,7 @@
+=== 1.0.1 / 2011-08-04
+
+* Use Jeweler for build management
+
 === 1.0.0 / 2011-08-04
 
 * 1 major enhancement

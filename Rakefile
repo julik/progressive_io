@@ -1,14 +1,29 @@
 # -*- ruby -*-
 
 require 'rubygems'
-require 'hoe'
+require 'jeweler'
+require './lib/progressive_io'
 
-Hoe.spec 'progressive_io' do | p |
-  p.developer('Julik Tarkhanov', 'me@ujulik.nl')
-  p.readme_file   = 'README.rdoc'
-  p.extra_rdoc_files  = FileList['*.rdoc'] + FileList['*.txt']
-  p.extra_dev_deps = {"flexmock" => "~> 0.8"}
-  p.clean_globs = File.read(File.dirname(__FILE__) + "/.gitignore").split(/\s/).to_a
+Jeweler::Tasks.new do |gem|
+  gem.version = ProgressiveIO::VERSION
+  gem.name = "progressive_io"
+  gem.summary = "An IO wrapper that sends reports on the offset to a callback, on each read operation"
+  gem.email = "me@julik.nl"
+  gem.homepage = "http://github.com/julik/progressive_io"
+  gem.authors = ["Julik Tarkhanov"]
+  gem.license = 'MIT'
 end
+
+Jeweler::RubygemsDotOrgTasks.new
+
+require 'rake/testtask'
+desc "Run all tests"
+Rake::TestTask.new("test") do |t|
+  t.libs << "test"
+  t.pattern = 'test/**/test_*.rb'
+  t.verbose = true
+end
+
+task :default => [ :test ]
 
 # vim: syntax=ruby

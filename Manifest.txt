@@ -1,7 +1,0 @@
-.autotest
-History.txt
-Manifest.txt
-README.rdoc
-Rakefile
-lib/progressive_io.rb
-test/test_progressive_io.rb
