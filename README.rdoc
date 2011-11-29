@@ -11,6 +11,8 @@ A wrapper for IO objects that allows a callback to be set which is called when a
 * Wraps any IO
 
 == SYNOPSIS:
+  
+  require "progressive_io"
 
   io = ProgressiveIO.new(File.open("/bigfile.dat")) do | pos, total_size |
     puts "Read %d bytes of %d" % [ pos, total_size ]
@@ -20,6 +22,20 @@ A wrapper for IO objects that allows a callback to be set which is called when a
   io.each do | line | # Each yielded line will call the callback block
      # Do stuff
   end
+
+For example, you can make any IO a provider for a [progressbar](http://rubygems.org/gem/progressbar)
+
+  require "progressive_io"
+  require "progressbar"
+  
+  pbar = Progressbar.new("Pumping data", io.size)
+  io_with_progress = ProgressiveIO.new(io) { |pos, total_size| pbar.set(pos) }
+  
+  # Then, elsewhere deep in the calling code...
+  io_with_progress.each do | line | # Each yielded line will call the callback block
+     # Each read operation will properly advance the progressbar
+  end
+
 
 == REQUIREMENTS:
 
