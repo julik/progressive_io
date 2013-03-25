@@ -84,7 +84,6 @@ class ProgressiveIO
     end
     
     def inner(m, *args)
-      $stderr.puts args.inspect
       r = @io.respond_to?(:public_send) ? @io.public_send(m, *args) : @io.send(m, *args)
       returning(r) { notify_read }
     end
