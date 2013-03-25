@@ -110,23 +110,28 @@ class TestProgressiveIO < Test::Unit::TestCase
     io.seek(6)
   end
   
-  def test_ungetc
-    io = e("Mary\nHad\nA little\nLamb")
-    m = []
-    io.progress_block = lambda do | offset, total |
-      m.push([offset, total])
-    end
-    
-    io.getc
-    io.ungetc(2)
-    assert_equal [[1, 22], [0, 22]], m
-  end
+#  def test_ungetc
+#    io = e("Mary\nHad\nA little\nLamb")
+#    m = []
+#    io.progress_block = lambda do | offset, total |
+#      m.push([offset, total])
+#    end
+#    
+#    char = io.getc
+#    io.ungetc("a")
+#    assert_equal [[1, 22], [0, 22]], m
+#  end
   
   def test_poseq
     io = e("Mary\nHad\nA little\nLamb")
+    m = []
     io.progress_block = lambda do | offset, total |
-      assert_equal [2, 22], [offset, total]
+      m << [offset, total]
     end
     io.pos = 2
+    io.pos = 3
+    io.pos = 4
+    
+    assert_equal [[2, 22], [3, 22], [4, 22]], m
   end
 end

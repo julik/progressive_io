@@ -69,9 +69,9 @@ class ProgressiveIO
     inner(:seek, *a)
   end
   
-  def ungetc(*a)
-    inner(:ungetc, a)
-  end 
+# def ungetc(*a)
+#   inner(:ungetc, a)
+# end 
   
   def pos=(p)
     inner(:pos=, p)
@@ -84,9 +84,9 @@ class ProgressiveIO
     end
     
     def inner(m, *args)
-      r = @io.send(m, *args)
-      notify_read
-      r
+      $stderr.puts args.inspect
+      r = @io.respond_to?(:public_send) ? @io.public_send(m, *args) : @io.send(m, *args)
+      returning(r) { notify_read }
     end
     # The "returning" idiom copied from ActiveSupport. We know that modern Rubies have
     # Object#tap but why mandate newer Rubies for something as small as this?
