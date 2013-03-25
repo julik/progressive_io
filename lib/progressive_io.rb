@@ -1,7 +1,12 @@
-require "delegate"
+require "forwardable"
 
-class ProgressiveIO < DelegateClass(IO)
-  VERSION = '1.0.0'
+class ProgressiveIO
+  extend Forwardable
+  
+  IO_METHODS = (IO.instance_methods - Object.instance_methods - Enumerable.instance_methods).map{|e| e.to_sym }
+  def_delegators :io, *IO_METHODS
+  
+  VERSION = '2.0.0'
   
   # Get or set the total size of the contained IO. If the passed IO is a File object 
   # the size will be preset automatically
@@ -12,7 +17,7 @@ class ProgressiveIO < DelegateClass(IO)
   # If the passed IO is a File-like object that responds to #stat then the size will be computed
   # automatically
   def initialize(with_io, &blk)
-    __setobj__(with_io)
+    @io = with_io
     @total_size = with_io.stat.size if with_io.respond_to?(:stat)
     @progress_block = blk.to_proc if blk
   end
@@ -20,7 +25,7 @@ class ProgressiveIO < DelegateClass(IO)
   # Report offset at each line
   def each(sep_string = $/, &blk)
     # Report offset at each call of the iterator
-    result = super(sep_string) do | line |
+    result = @io.each(sep_string) do | line |
       yield(line)
       notify_read
     end
@@ -29,50 +34,60 @@ class ProgressiveIO < DelegateClass(IO)
   
   def each_byte(&blk)
     # Report offset at each call of the iterator
-    super { |b| yield(b); notify_read }
+    @io.each_byte { |b| yield(b); notify_read }
   end
   
   def getc
-    returning(super) { notify_read }
+    inner(:getc)
   end
   
   def gets
-    returning(super) { notify_read }
+    inner(:gets)
   end
   
   def read(*a)
-    returning(super) { notify_read }
+    inner(:read, *a)
   end
   
   def readbytes(*a)
-    returning(super) { notify_read }
+    inner(:readbytes, *a)
   end
   
   def readchar
-    returning(super) { notify_read }
+    inner(:readchar)
   end
   
   def readline(*a)
-    returning(super) { notify_read }
+    inner(:readline, *a)
   end
   
   def readlines(*a)
-    returning(super) { notify_read }
+    inner(:readlines, *a)
   end
   
   def seek(*a)
-    returning(super) { notify_read }
+    inner(:seek, *a)
   end
   
   def ungetc(*a)
-    returning(super) { notify_read }
+    inner(:ungetc, a)
   end 
   
   def pos=(p)
-    returning(super) { notify_read }
+    inner(:pos=, p)
   end
   
   private
+    
+    def io
+      @io
+    end
+    
+    def inner(m, *args)
+      r = @io.send(m, *args)
+      notify_read
+      r
+    end
     # The "returning" idiom copied from ActiveSupport. We know that modern Rubies have
     # Object#tap but why mandate newer Rubies for something as small as this?
     def returning(r)
@@ -81,6 +96,6 @@ class ProgressiveIO < DelegateClass(IO)
     
     # This method will be called when something is read
     def notify_read
-      @progress_block.call(pos, @total_size) if @progress_block
+      @progress_block.call(@io.pos, @total_size) if @progress_block
     end
 end
