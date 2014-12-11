@@ -1,5 +1,5 @@
 # -*- ruby -*-
-source :rubygems
+source 'https://rubygems.org'
 
 group :development do
   gem "jeweler", "1.8.4" # to avoid Nokogiri
