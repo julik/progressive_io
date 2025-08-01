@@ -1,3 +1,7 @@
+## 2.0.1
+
+* Revert back to using SimpleDelegator - it's just easier.
+
 ## 2.0.0
 
 * Added comprehensive documentation with examples

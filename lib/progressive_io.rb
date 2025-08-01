@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'delegate'
+
 # A wrapper class that provides progress tracking for IO operations.
 # 
 # This class wraps an IO object and calls a progress block whenever data is read,
@@ -24,9 +26,9 @@
 #   content = progress_io.read
 # 
 # @since 2.0.0
-class ProgressiveIO
+class ProgressiveIO < SimpleDelegator
   # The version of the ProgressiveIO library
-  VERSION = '2.0.0'
+  VERSION = '2.0.1'
   
   # @return [Proc, nil] The progress callback block that will be called when data is read
   #   The block receives one parameter: current position
@@ -46,7 +48,7 @@ class ProgressiveIO
   #     puts "Read #{pos} bytes"
   #   end
   def initialize(with_io, &blk)
-    @io = with_io
+    super(with_io)
     @progress_block = blk.to_proc if blk
   end
   
@@ -63,7 +65,7 @@ class ProgressiveIO
   #   end
   def each(sep_string = $/, &blk)
     # Report offset at each call of the iterator
-    @io.each(sep_string) do | line |
+    super(sep_string) do |line|
       yield(line).tap { notify_read }
     end
   end
@@ -81,7 +83,7 @@ class ProgressiveIO
   #   end
   def each_byte(&blk)
     # Report offset at each call of the iterator
-    @io.each_byte { |b| yield(b).tap { notify_read } }
+    super { |b| yield(b).tap { notify_read } }
   end
   
   # Reads a single character from the IO stream.
@@ -89,7 +91,7 @@ class ProgressiveIO
   # @return [String, nil] The next character or nil if at end of stream
   # @see IO#getc
   def getc
-    inner(:getc)
+    super.tap { notify_read }
   end
   
   # Reads a line from the IO stream.
@@ -98,7 +100,7 @@ class ProgressiveIO
   # @return [String, nil] The next line or nil if at end of stream
   # @see IO#gets
   def gets(*args)
-    inner(:gets, *args)
+    super(*args).tap { notify_read }
   end
   
   # Reads data from the IO stream.
@@ -107,7 +109,7 @@ class ProgressiveIO
   # @return [String, nil] The read data or nil if at end of stream
   # @see IO#read
   def read(*a)
-    inner(:read, *a)
+    super(*a).tap { notify_read }
   end
   
   # Reads a specific number of bytes from the IO stream.
@@ -116,7 +118,7 @@ class ProgressiveIO
   # @return [String] The read bytes
   # @see IO#readbytes
   def readbytes(*a)
-    inner(:readbytes, *a)
+    super(*a).tap { notify_read }
   end
   
   # Reads a single character from the IO stream.
@@ -125,7 +127,7 @@ class ProgressiveIO
   # @raise [EOFError] If at end of stream
   # @see IO#readchar
   def readchar
-    inner(:readchar)
+    super.tap { notify_read }
   end
   
   # Reads a line from the IO stream.
@@ -135,7 +137,7 @@ class ProgressiveIO
   # @raise [EOFError] If at end of stream
   # @see IO#readline
   def readline(*a)
-    inner(:readline, *a)
+    super(*a).tap { notify_read }
   end
   
   # Reads all lines from the IO stream.
@@ -144,7 +146,7 @@ class ProgressiveIO
   # @return [Array<String>] Array of lines
   # @see IO#readlines
   def readlines(*a)
-    inner(:readlines, *a)
+    super(*a).tap { notify_read }
   end
   
   # Seeks to a position in the IO stream.
@@ -153,11 +155,11 @@ class ProgressiveIO
   # @return [Integer] The new position
   # @see IO#seek
   def seek(*a)
-    inner(:seek, *a)
+    super(*a)
   end
   
 # def ungetc(*a)
-#   inner(:ungetc, a)
+#   super(*a).tap { notify_read }
 # end 
   
   # Sets the position in the IO stream.
@@ -166,31 +168,16 @@ class ProgressiveIO
   # @return [Integer] The new position
   # @see IO#pos=
   def pos=(p)
-    inner(:pos=, p)
+    super(p).tap { notify_read }
   end
   
   private
-    
-    # @return [IO] The wrapped IO object
-    def io
-      @io
-    end
-    
-    # Delegates method calls to the wrapped IO object and calls the progress block.
-    # 
-    # @param m [Symbol] The method name to call
-    # @param args [Array] Arguments to pass to the method
-    # @return [Object] The result of the method call
-    def inner(m, *args)
-      r = @io.respond_to?(:public_send) ? @io.public_send(m, *args) : @io.send(m, *args)
-      r.tap { notify_read }
-    end
     
     # Calls the progress block with current position.
     # This method is called whenever data is read from the IO stream.
     # 
     # @return [void]
     def notify_read
-      @progress_block.call(@io.pos) if @progress_block
+      @progress_block.call(pos) if @progress_block
     end
 end
