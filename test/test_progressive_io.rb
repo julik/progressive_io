@@ -1,10 +1,10 @@
-require "test/unit"
-require "progressive_io"
+require "minitest/autorun"
+require_relative "../lib/progressive_io"
 require "flexmock"
-require "flexmock/test_unit"
+require "flexmock/minitest"
 require "stringio"
 
-class TestProgressiveIO < Test::Unit::TestCase
+class TestProgressiveIO < Minitest::Test
   
   def e(s)
     
@@ -54,12 +54,38 @@ class TestProgressiveIO < Test::Unit::TestCase
     end
   end
   
+
+  
   def test_gets
     io = e("Mary\nHad\nA little\nLamb")
     io.progress_block = lambda do | offset, total |
       assert_equal [5, 22], [offset, total]
     end
     assert_equal "Mary\n", io.gets
+  end
+  
+  def test_gets_with_separator
+    io = e("Mary\nHad\nA little\nLamb")
+    io.progress_block = lambda do | offset, total |
+      assert_equal [4, 22], [offset, total]
+    end
+    assert_equal "Mary", io.gets("y")
+  end
+  
+  def test_gets_with_limit
+    io = e("Mary\nHad\nA little\nLamb")
+    io.progress_block = lambda do | offset, total |
+      assert_equal [3, 22], [offset, total]
+    end
+    assert_equal "Mar", io.gets(3)
+  end
+  
+  def test_gets_with_separator_and_limit
+    io = e("Mary\nHad\nA little\nLamb")
+    io.progress_block = lambda do | offset, total |
+      assert_equal [2, 22], [offset, total]
+    end
+    assert_equal "Ma", io.gets("a", 2)
   end
   
   def test_read
@@ -83,12 +109,38 @@ class TestProgressiveIO < Test::Unit::TestCase
     end
   end
   
+
+  
   def test_readline
     io = e("Mary\nHad\nA little\nLamb")
     io.progress_block = lambda do | offset, total |
       assert_equal [5, 22], [offset, total]
     end
     assert_equal "Mary\n", io.readline
+  end
+  
+  def test_readline_with_separator
+    io = e("Mary\nHad\nA little\nLamb")
+    io.progress_block = lambda do | offset, total |
+      assert_equal [4, 22], [offset, total]
+    end
+    assert_equal "Mary", io.readline("y")
+  end
+  
+  def test_readline_with_limit
+    io = e("Mary\nHad\nA little\nLamb")
+    io.progress_block = lambda do | offset, total |
+      assert_equal [3, 22], [offset, total]
+    end
+    assert_equal "Mar", io.readline(3)
+  end
+  
+  def test_readline_with_separator_and_limit
+    io = e("Mary\nHad\nA little\nLamb")
+    io.progress_block = lambda do | offset, total |
+      assert_equal [2, 22], [offset, total]
+    end
+    assert_equal "Ma", io.readline("a", 2)
   end
   
   def test_readlines
@@ -99,6 +151,17 @@ class TestProgressiveIO < Test::Unit::TestCase
     end
     
     assert_equal ["Mary\n", "Had\n", "A little\n", "Lamb"], io.readlines
+    assert_equal [[22, 22]], m
+  end
+  
+  def test_readlines_with_separator
+    io = e("Mary\nHad\nA little\nLamb")
+    m = []
+    io.progress_block = lambda do | offset, total |
+      m.push([offset, total])
+    end
+    
+    assert_equal ["Mary\nHad\nA little", "\nLamb"], io.readlines("e")
     assert_equal [[22, 22]], m
   end
   

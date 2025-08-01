@@ -1,51 +1,56 @@
-= progressive_io
+# progressive_io
 
 * http://github.com/julik/progressive_io
 
-== DESCRIPTION:
+## DESCRIPTION
 
-A wrapper for IO objects that allows a callback to be set which is called when an object is read from
+A wrapper for IO objects that allows a callback to be set which is called when an object is read from.
 
-== FEATURES/PROBLEMS:
+## FEATURES/PROBLEMS
 
 * Wraps any IO
 
-== SYNOPSIS:
-  
-  require "progressive_io"
+## SYNOPSIS
 
-  io = ProgressiveIO.new(File.open("/bigfile.dat")) do | pos, total_size |
-    puts "Read %d bytes of %d" % [ pos, total_size ]
-  end
-  
-  # Then, elsewhere deep in the calling code...
-  io.each do | line | # Each yielded line will call the callback block
-     # Do stuff
-  end
+```ruby
+require "progressive_io"
 
-For example, you can make any IO a provider for a [progressbar](http://rubygems.org/gem/progressbar)
+io = ProgressiveIO.new(File.open("/bigfile.dat")) do | pos, total_size |
+  puts "Read %d bytes of %d" % [ pos, total_size ]
+end
 
-  require "progressive_io"
-  require "progressbar"
-  
-  pbar = Progressbar.new("Pumping data", io.size)
-  io_with_progress = ProgressiveIO.new(io) { |pos, total_size| pbar.set(pos) }
-  
-  # Then, elsewhere deep in the calling code...
-  io_with_progress.each do | line | # Each yielded line will call the callback block
-     # Each read operation will properly advance the progressbar
-  end
+# Then, elsewhere deep in the calling code...
+io.each do | line | # Each yielded line will call the callback block
+   # Do stuff
+end
+```
 
+For example, you can make any IO a provider for a [progressbar](http://rubygems.org/gem/progressbar):
 
-== REQUIREMENTS:
+```ruby
+require "progressive_io"
+require "progressbar"
+
+pbar = Progressbar.new("Pumping data", io.size)
+io_with_progress = ProgressiveIO.new(io) { |pos, total_size| pbar.set(pos) }
+
+# Then, elsewhere deep in the calling code...
+io_with_progress.each do | line | # Each yielded line will call the callback block
+   # Each read operation will properly advance the progressbar
+end
+```
+
+## REQUIREMENTS
 
 * Ruby 1.8.6+
 
-== INSTALL:
+## INSTALL
 
-* gem install progressive_io
+```bash
+gem install progressive_io
+```
 
-== LICENSE:
+## LICENSE
 
 (The MIT License)
 
@@ -68,4 +73,4 @@ MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
 CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 

@@ -41,8 +41,8 @@ class ProgressiveIO
     inner(:getc)
   end
   
-  def gets
-    inner(:gets)
+  def gets(*args)
+    inner(:gets, *args)
   end
   
   def read(*a)
