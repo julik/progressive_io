@@ -1,16 +1,11 @@
-# -*- ruby -*-
+require "bundler/gem_tasks"
+require "rake/testtask"
 
-desc "Run all tests"
-task :test do
-  require 'test/unit'
-  require_relative 'lib/progressive_io'
-  
-  # Load all test files
-  Dir.glob('test/test_*.rb').each do |test_file|
-    load test_file
-  end
+Rake::TestTask.new(:test) do |t|
+  t.libs << "test"
+  t.libs << "lib"
+  t.pattern = "test/test_*.rb"
+  t.verbose = true
 end
 
 task :default => :test
-
-# vim: syntax=ruby

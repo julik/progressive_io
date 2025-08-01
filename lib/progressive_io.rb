@@ -3,8 +3,7 @@ require "forwardable"
 class ProgressiveIO
   extend Forwardable
   
-  IO_METHODS = (IO.instance_methods - Object.instance_methods - Enumerable.instance_methods).map{|e| e.to_sym }
-  def_delegators :io, *IO_METHODS
+
   
   VERSION = '2.0.0'
   
@@ -25,16 +24,15 @@ class ProgressiveIO
   # Report offset at each line
   def each(sep_string = $/, &blk)
     # Report offset at each call of the iterator
-    result = @io.each(sep_string) do | line |
-      yield(line)
-      notify_read
+    @io.each(sep_string) do | line |
+      yield(line).tap { notify_read }
     end
   end
   alias_method :each_line, :each
   
   def each_byte(&blk)
     # Report offset at each call of the iterator
-    @io.each_byte { |b| yield(b); notify_read }
+    @io.each_byte { |b| yield(b).tap { notify_read } }
   end
   
   def getc
@@ -85,12 +83,7 @@ class ProgressiveIO
     
     def inner(m, *args)
       r = @io.respond_to?(:public_send) ? @io.public_send(m, *args) : @io.send(m, *args)
-      returning(r) { notify_read }
-    end
-    # The "returning" idiom copied from ActiveSupport. We know that modern Rubies have
-    # Object#tap but why mandate newer Rubies for something as small as this?
-    def returning(r)
-      yield(r); r
+      r.tap { notify_read }
     end
     
     # This method will be called when something is read
