@@ -28,7 +28,7 @@ require 'delegate'
 # @since 2.0.0
 class ProgressiveIO < SimpleDelegator
   # The version of the ProgressiveIO library
-  VERSION = '2.0.1'
+  VERSION = '2.0.2'
   
   # @return [Proc, nil] The progress callback block that will be called when data is read
   #   The block receives one parameter: current position
@@ -54,7 +54,33 @@ class ProgressiveIO < SimpleDelegator
   
   # Iterates over the IO stream line by line, calling the progress block for each line.
   # 
-  # @param sep_string [String] The line separator (defaults to $/)
+  # @param args [Array] Arguments to pass to the underlying IO#each method (separator and/or limit)
+  # @yield [line] Each line from the IO stream
+  # @yieldparam line [String] A line from the IO stream
+  # @return [Enumerator] An enumerator if no block is given
+  # 
+  # @example
+  #   progress_io.each do |line|
+  #     puts "Processing: #{line.chomp}"
+  #   end
+  # 
+  # @example Using as an Enumerator
+  #   progress_io.each.with_index do |line, idx|
+  #     puts "Line #{idx}: #{line.chomp}"
+  #   end
+  def each(*args, &blk)
+    return enum_for(__method__, *args) unless block_given?
+    
+    # Report offset at each call of the iterator
+    super(*args) do |line|
+      yield(line).tap { notify_read }
+    end
+  end
+  
+  # Iterates over the IO stream line by line, calling the progress block for each line.
+  # This is an alias-like method for {#each} that ensures proper Enumerator behavior.
+  # 
+  # @param args [Array] Arguments to pass to the underlying IO#each_line method (separator and/or limit)
   # @yield [line] Each line from the IO stream
   # @yieldparam line [String] A line from the IO stream
   # @return [Enumerator] An enumerator if no block is given
@@ -63,13 +89,16 @@ class ProgressiveIO < SimpleDelegator
   #   progress_io.each_line do |line|
   #     puts "Processing: #{line.chomp}"
   #   end
-  def each(sep_string = $/, &blk)
-    # Report offset at each call of the iterator
-    super(sep_string) do |line|
-      yield(line).tap { notify_read }
-    end
+  # 
+  # @example Using as an Enumerator
+  #   progress_io.each_line.with_index do |line, idx|
+  #     puts "Line #{idx}: #{line.chomp}"
+  #   end
+  def each_line(*args, &blk)
+    return enum_for(__method__, *args) unless block_given?
+    
+    each(*args, &blk)
   end
-  alias_method :each_line, :each
   
   # Iterates over the IO stream byte by byte, calling the progress block for each byte.
   # 
@@ -81,7 +110,14 @@ class ProgressiveIO < SimpleDelegator
   #   progress_io.each_byte do |byte|
   #     puts "Byte: #{byte}"
   #   end
+  # 
+  # @example Using as an Enumerator
+  #   progress_io.each_byte.with_index do |byte, idx|
+  #     puts "Byte #{idx}: #{byte}"
+  #   end
   def each_byte(&blk)
+    return enum_for(__method__) unless block_given?
+    
     # Report offset at each call of the iterator
     super { |b| yield(b).tap { notify_read } }
   end
