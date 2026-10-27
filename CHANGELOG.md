@@ -1,3 +1,18 @@
+## 2.1.0
+
+* Report `readpartial`, `read_nonblock`, `sysread`, `getbyte`, `readbyte`, `each_char` and
+  `each_codepoint`, which went past the wrapper unreported.
+* `IO.copy_stream` reports now. It read a wrapped File by opening its path itself, and a wrapped
+  IO through `to_io`, so the wrapper no longer passes on `to_path` or `to_io` - reach the
+  wrapped IO with `__getobj__` where you need it (`IO.select`, say). Without them
+  `IO.copy_stream` reads through `readpartial`, which also means no zero-copy fast path.
+* Pass keyword arguments on: `gets(chomp: true)`, `readline`, `readlines`, `each` and
+  `each_line` used to raise `TypeError`.
+* Work with pipes and sockets. Every read raised `Errno::ESPIPE`, since reporting asked the IO
+  for its position; for a stream without one, the bytes read so far are reported instead, and
+  `ungetc`/`ungetbyte` take pushed-back bytes off that count.
+* Require Ruby 3.2.
+
 ## 2.0.2
 
 * Fix `each_line` to return an Enumerator that properly references `:each_line` method

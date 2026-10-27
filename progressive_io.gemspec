@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.summary = "An IO wrapper that sends reports on the offset to a callback, on each read operation"
   s.homepage = "http://github.com/julik/progressive_io"
   s.license = "MIT"
-  s.required_ruby_version = ">= 1.8.7"
+  s.required_ruby_version = ">= 3.2"
 
   s.files = [
     "CHANGELOG.md",

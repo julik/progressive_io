@@ -8,7 +8,9 @@ A wrapper for IO objects that allows a callback to be set which is called when a
 
 ## FEATURES/PROBLEMS
 
-* Wraps any IO
+* Wraps any IO: files, StringIO, pipes and sockets
+* Reports every kind of read, including `readpartial`, so `IO.copy_stream` reports too
+* On a pipe or a socket, which have no position, reports the bytes read so far instead
 
 ## SYNOPSIS
 
@@ -42,9 +44,17 @@ io_with_progress.each do | line | # Each yielded line will call the callback blo
 end
 ```
 
+Copying reports as it goes:
+
+```ruby
+IO.copy_stream(ProgressiveIO.new(File.open("/bigfile.dat")) { |pos| pbar.set(pos) }, destination)
+```
+
+The wrapper does not pass on `to_io` or `to_path`, since `IO.copy_stream` would use them to read the file past it. To get at the wrapped IO, use `__getobj__`.
+
 ## REQUIREMENTS
 
-* Ruby 1.8.6+
+* Ruby 3.2+
 
 ## INSTALL
 
